@@ -12,8 +12,8 @@ lerna-debug.log*
 >>>>>>> 0d76a0bf872d42e79dc376ee0c4fe76c816e50e4
 
 node_modules
-.env
 package-lock.json
+.env
 
 *.local
 
