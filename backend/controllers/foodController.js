@@ -17,6 +17,7 @@ const listFood = async (req, res) => {
 const addFood = async (req, res) => {
 
     try {
+        const imageUrl = `${process.env.BASE_URL}/uploads/${req.file.filename}`;
         let image_filename = `${req.file.filename}`
 
         const food = new foodModel({
@@ -24,7 +25,7 @@ const addFood = async (req, res) => {
             description: req.body.description,
             price: req.body.price,
             category:req.body.category,
-            image: image_filename,
+            image: imageUrl,
         })
 
         await food.save();
