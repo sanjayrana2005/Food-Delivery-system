@@ -1,5 +1,5 @@
 import foodModel from "../models/foodModel.js";
-import fs from 'fs'
+import cloudinary from "../utils/cloudinary.js";
 
 // all food list
 const listFood = async (req, res) => {
@@ -17,22 +17,40 @@ const listFood = async (req, res) => {
 const addFood = async (req, res) => {
 
     try {
-        const imageUrl = `${process.env.BASE_URL}/uploads/${req.file.filename}`;
-        let image_filename = `${req.file.filename}`
+         const image = req.body.file;
+         if(!image){
+            return res.json({success:false,message:"Image is required"});
+         }
+
+         let imageData;
+
+         const cloudinaryRes = await cloudinary.uploader(image.tempFilePath,{
+            folder:"Food-Del",
+            overwrite:true
+         });
+
+         imageData = {
+                public_id:cloudinaryRes?.public_id,
+                url:cloudinaryRes?.secure_url
+         }
+
+         if(!cloudinaryRes || cloudinaryRes.error){
+            return res.json({success:false,message:cloudinaryRes?.error?.message || "Image upload failed"})
+         }
 
         const food = new foodModel({
             name: req.body.name,
             description: req.body.description,
             price: req.body.price,
             category:req.body.category,
-            image: imageUrl,
+            image: imageData,
         })
 
         await food.save();
-        res.json({ success: true, message: "Food Added" })
+        res.json({ success: true, message: "Food Added",food })
     } catch (error) {
         console.log(error);
-        res.json({ success: false, message: "Error" })
+        res.json({ success: false, message: ffff })
     }
 }
 
@@ -41,7 +59,8 @@ const removeFood = async (req, res) => {
     try {
 
         const food = await foodModel.findById(req.body.id);
-        fs.unlink(`uploads/${food.image}`, () => { })
+
+        await cloudinary.uploader.destroy(food.image?.public_id);
 
         await foodModel.findByIdAndDelete(req.body.id)
         res.json({ success: true, message: "Food Removed" })
