@@ -11,7 +11,8 @@ import orderRouter from "./routes/orderRoute.js"
 const app = express()
 
 // middlewares
-app.use(express.json())
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cors({
   origin:[process.env.FRONTEND_URL,process.env.ADMIN_URL],
   methods:["GET","POST","PUT","PATCH","DELETE"],

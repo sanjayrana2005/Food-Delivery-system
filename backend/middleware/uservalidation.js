@@ -20,3 +20,15 @@ export const registerControllerValidation = (req) =>{
 
     return true;
 }
+
+export const loginUserControllerValidation = (req) => {
+    const {email,password} = req.body;
+    if(!email){
+        throw new Error("Email is required");
+    }
+    if(!password){
+        throw new Error("Password is required");
+    }
+
+    return true;
+}
