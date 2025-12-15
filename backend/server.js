@@ -6,6 +6,7 @@ import foodRouter from "./routes/foodRoute.js"
 import 'dotenv/config'
 import cartRouter from "./routes/cartRoute.js"
 import orderRouter from "./routes/orderRoute.js"
+import cookieParser from "cookie-parser"
 
 // app config
 const app = express()
@@ -18,6 +19,7 @@ app.use(cors({
   methods:["GET","POST","PUT","PATCH","DELETE"],
   credentials:true
 }));
+app.use(cookieParser());
 
 
 // api endpoints

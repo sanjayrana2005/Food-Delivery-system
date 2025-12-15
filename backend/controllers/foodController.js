@@ -37,29 +37,31 @@ const addFood = async (req, res) => {
             image: imageData,
         });
 
-        if (req.file && req.file.path) fs.unlinkSync(req.file.path);
-
         await food.save();
-        res.json({ success: true, message: "Food Added",food });
+        res.json({ success: true, message: "Food Added", food });
     } catch (error) {
         if (req.file && req.file.path) {
             fs.unlinkSync(req.file.path)
         }
         res.json({ success: false, message: error.message });
+    } finally {
+        if (req.file && req.file.path) {
+            return fs.unlinkSync(req.file.path);
+        }
     }
 }
 
 // delete food
 const removeFood = async (req, res) => {
     try {
-        const {id} = req.body;
-        if(!id){
-                return res.json({ success: false, message: "Select food to delete or provide id" })
+        const { id } = req.body;
+        if (!id) {
+            return res.json({ success: false, message: "Select food to delete or provide id" })
         }
         const food = await foodModel.findById(req.body.id);
 
-        if(!food){
-                return res.json({ success: false, message: "Food already removed" })
+        if (!food) {
+            return res.json({ success: false, message: "Food already removed" })
         }
 
         await cloudinary.uploader.destroy(food.image.public_id);
