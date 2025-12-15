@@ -1,5 +1,7 @@
+import { addFoodControllerValidation } from "../middleware/foodValidation.js";
 import foodModel from "../models/foodModel.js";
 import cloudinary from "../utils/cloudinary.js";
+import fs from "fs"
 
 // all food list
 const listFood = async (req, res) => {
@@ -15,42 +17,35 @@ const listFood = async (req, res) => {
 
 // add food
 const addFood = async (req, res) => {
-
+    const image = req.file;
     try {
-         const image = req.body.file;
-         if(!image){
-            return res.json({success:false,message:"Image is required"});
-         }
+        addFoodControllerValidation(req);
+        const cloudinaryRes = await cloudinary.uploader.upload(image.path, {
+            folder: "Food-del",
+            resource_type: "auto"
+        });
 
-         let imageData;
-
-         const cloudinaryRes = await cloudinary.uploader(image.tempFilePath,{
-            folder:"Food-Del",
-            overwrite:true
-         });
-
-         imageData = {
-                public_id:cloudinaryRes?.public_id,
-                url:cloudinaryRes?.secure_url
-         }
-
-         if(!cloudinaryRes || cloudinaryRes.error){
-            return res.json({success:false,message:cloudinaryRes?.error?.message || "Image upload failed"})
-         }
-
+        let imageData = {
+            url: cloudinaryRes.secure_url,       // Cloudinary URL
+            public_id: cloudinaryRes.public_id // Cloudinary public_id
+        }
         const food = new foodModel({
             name: req.body.name,
             description: req.body.description,
             price: req.body.price,
-            category:req.body.category,
+            category: req.body.category,
             image: imageData,
-        })
+        });
+
+        if (req.file && req.file.path) fs.unlinkSync(req.file.path);
 
         await food.save();
-        res.json({ success: true, message: "Food Added",food })
+        res.json({ success: true, message: "Food Added",food });
     } catch (error) {
-        console.log(error);
-        res.json({ success: false, message: ffff })
+        if (req.file && req.file.path) {
+            fs.unlinkSync(req.file.path)
+        }
+        res.json({ success: false, message: error.message });
     }
 }
 
@@ -60,13 +55,10 @@ const removeFood = async (req, res) => {
 
         const food = await foodModel.findById(req.body.id);
 
-        await cloudinary.uploader.destroy(food.image?.public_id);
-
         await foodModel.findByIdAndDelete(req.body.id)
         res.json({ success: true, message: "Food Removed" })
 
     } catch (error) {
-        console.log(error);
         res.json({ success: false, message: "Error" })
     }
 
