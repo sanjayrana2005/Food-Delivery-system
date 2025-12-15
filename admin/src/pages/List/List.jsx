@@ -9,25 +9,29 @@ const List = () => {
   const [list, setList] = useState([]);
 
   const fetchList = async () => {
-    const response = await axios.get(`${url}/api/food/list`)
+    const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/food/list`)
     if (response.data.success) {
-      setList(response.data.data);
+      setList(response.data.foods);
     }
     else {
       toast.error("Error")
     }
   }
 
-  const removeFood = async (foodId) => {
-    const response = await axios.post(`${url}/api/food/remove`, {
-      id: foodId
-    })
+  const removeFood = async (id) => {
+    try {
+      const response = await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/food/remove/${id}`,{
+      withCredentials:true,
+    }
+  )
     await fetchList();
     if (response.data.success) {
       toast.success(response.data.message);
+    } else {
+      toast.error(response.data.message)
     }
-    else {
-      toast.error("Error")
+    } catch (error) {
+      toast.error(error.response.data.message)
     }
   }
 
@@ -49,7 +53,7 @@ const List = () => {
         {list.map((item, index) => {
           return (
             <div key={index} className='list-table-format'>
-              <img src={`${url}/images/` + item.image} alt="" />
+              <img src={item.image?.url} alt="food image" />
               <p>{item.name}</p>
               <p>{item.category}</p>
               <p>{currency}{item.price}</p>

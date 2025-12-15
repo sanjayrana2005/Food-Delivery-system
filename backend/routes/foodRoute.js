@@ -7,6 +7,6 @@ const foodRouter = express.Router();
 
 foodRouter.get("/list",listFood);
 foodRouter.post("/add",upload.single('image'),authMiddleware,isAdmin,addFood);
-foodRouter.delete("/remove",authMiddleware,isAdmin,removeFood);
+foodRouter.delete("/remove/:id",authMiddleware,isAdmin,removeFood);
 
 export default foodRouter;

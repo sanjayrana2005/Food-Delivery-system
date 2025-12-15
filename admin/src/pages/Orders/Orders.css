@@ -1,42 +1,90 @@
-.order-item{
+.order-item {
     display: grid;
     grid-template-columns: 0.5fr 2fr 1fr 1fr 1fr;
-    align-items: start;
     gap: 30px;
+    align-items: start;
+
     border: 1px solid tomato;
     padding: 20px;
-    margin: 30px 0px;
+    margin: 30px 0;
     font-size: 14px;
     color: #505050;
 }
-.order-item-food,.order-item-name{
+
+.order-item img {
+    width: 50px;
+}
+
+.order-item-food,
+.order-item-name {
     font-weight: 600;
 }
-.order-item-name{
-    margin-top: 30px;
+
+.order-item-name {
+    margin-top: 20px;
     margin-bottom: 5px;
 }
-.order-item-address{
+
+.order-item-address {
     margin-bottom: 10px;
 }
-.order-item select{
+
+/* ================= SELECT STYLING ================= */
+
+.select-wrapper {
+    width: 100%;
+}
+
+.order-item select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    width: 100%;
+    max-width: 200px;
+    padding: 10px 14px;
+    padding-right: 36px;
+
     background-color: #ffe8e4;
     border: 1px solid tomato;
-    width: max(10vw,120px);
-    padding: 10px;
-    outline:none;
+    border-radius: 6px;
+
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    cursor: pointer;
+    outline: none;
+
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%23ff6347' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 12px;
 }
-@media(max-width:1000px){
-    .order-item{
+
+.order-item select:hover {
+    background-color: #ffd7d1;
+}
+
+.order-item select:focus {
+    border-color: #ff6347;
+    box-shadow: 0 0 0 2px rgba(255, 99, 71, 0.25);
+}
+
+/* ================= MOBILE FIX ================= */
+
+@media (max-width: 1000px) {
+    .order-item {
+        grid-template-columns: 1fr;
         font-size: 12px;
-        grid-template-columns: 0.5fr 2fr 1fr;
-        padding: 15px 8px;
+        padding: 15px;
     }
-    .order-item select{
-        padding: 5px;
-        font-size: 12px;
-    }
-    .order-item img{
+
+    .order-item img {
         width: 40px;
+    }
+
+    .order-item select {
+        max-width: 100%;
+        font-size: 13px;
     }
 }

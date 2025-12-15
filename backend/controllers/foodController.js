@@ -9,8 +9,7 @@ const listFood = async (req, res) => {
         const foods = await foodModel.find({})
         res.json({ success: true, foods })
     } catch (error) {
-        console.log(error);
-        res.json({ success: false, message: "Error" })
+        res.json({ success: false, message: error.message })
     }
 
 }
@@ -56,11 +55,11 @@ const addFood = async (req, res) => {
 // delete food
 const removeFood = async (req, res) => {
     try {
-        const { id } = req.body;
+        const { id } = req.params;
         if (!id) {
             return res.json({ success: false, message: "Select food to delete or provide id" })
         }
-        const food = await foodModel.findById(req.body.id);
+        const food = await foodModel.findById(id);
 
         if (!food) {
             return res.json({ success: false, message: "Food already removed" })
@@ -68,11 +67,10 @@ const removeFood = async (req, res) => {
 
         await cloudinary.uploader.destroy(food.image.public_id);
 
-        await foodModel.findByIdAndDelete(req.body.id)
+        await foodModel.findByIdAndDelete(id)
         res.json({ success: true, message: "Food Removed" })
 
     } catch (error) {
-        console.log(error)
         res.json({ success: false, message: error.message })
     }
 
