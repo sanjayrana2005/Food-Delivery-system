@@ -1,12 +1,13 @@
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js"
 import Stripe from "stripe";
+import "dotenv/config"
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 //config variables
 const currency = "inr";
 const deliveryCharge = 50;
-const frontend_URL = 'https://food-delivery-system-frontend-pgfx.onrender.com/';
+const frontend_URL = process.env.FRONTEND_URL;
 
 // Placing User Order for Frontend using stripe
 const placeOrder = async (req, res) => {
@@ -103,7 +104,6 @@ const userOrders = async (req, res) => {
 }
 
 const updateStatus = async (req, res) => {
-    console.log(req.body);
     try {
         await orderModel.findByIdAndUpdate(req.body.orderId, { status: req.body.status });
         res.json({ success: true, message: "Status Updated" })
