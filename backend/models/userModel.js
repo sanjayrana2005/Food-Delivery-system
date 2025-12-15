@@ -5,6 +5,11 @@ const userSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true,select:false },
     cartData:{type:Object,default:{}},
+    role: {
+      type: String,
+      enum: ["user", "admin"], // allowed values only
+      default: "user",         // always user by default
+    },
 }, { minimize: false })
 
 const userModel = mongoose.models.user || mongoose.model("user", userSchema);
