@@ -81,3 +81,21 @@ button:hover {
 .text span:hover {
     text-decoration: underline;
 }
+
+.password-group {
+    position: relative;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 38px;
+    cursor: pointer;
+    color: tomato;
+    display: flex;
+    align-items: center;
+}
+
+.password-toggle:hover {
+    opacity: 0.8;
+}
