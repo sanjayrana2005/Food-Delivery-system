@@ -37,6 +37,8 @@ const addFood = async (req, res) => {
             image: imageData,
         });
 
+
+
         await food.save();
         res.json({ success: true, message: "Food Added", food });
     } catch (error) {

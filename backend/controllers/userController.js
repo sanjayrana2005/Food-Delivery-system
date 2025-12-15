@@ -27,9 +27,8 @@ const loginUser = async (req, res) => {
             secure: true,
             sameSite: "none"
         });
-        res.json({ success: true, token });
+        res.json({ success: true,message:"Login successfully", token });
     } catch (error) {
-        console.log(error);
         res.json({ success: false, message: error.message })
     }
 }

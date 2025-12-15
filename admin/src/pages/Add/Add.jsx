@@ -31,21 +31,21 @@ const Add = () => {
         formData.append("image", image);
 
         try {
-            const response = await axios.post(`${url}/api/food/add`, formData);
-            console.log(response)
+            const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/food/add`, formData,{
+                withCredentials:true
+            });
         if (response.data.success) {
             toast.success(response.data.message)
             setData({
                 name: "",
                 description: "",
                 price: "",
-                category: data.category
+                category: data?.category
             })
             setImage(false);
         }
         } catch (error) {
-            console.log(error)
-            toast.error(error.response.data.message)
+            toast.error(error.response?.data?.message)
         }
     }
 
