@@ -7,7 +7,7 @@ import { toast } from 'react-toastify'
 
 const LoginPopup = ({ setShowLogin }) => {
 
-    const { setToken, url,loadCartData } = useContext(StoreContext)
+    const { setToken,loadCartData,getUser } = useContext(StoreContext)
     const [currState, setCurrState] = useState("Sign Up");
 
     const [data, setData] = useState({
@@ -25,17 +25,20 @@ const LoginPopup = ({ setShowLogin }) => {
     const onLogin = async (e) => {
         e.preventDefault()
 
-        let new_url = url;
+        let new_url = import.meta.env.VITE_BACKEND_URL
         if (currState === "Login") {
             new_url += "/api/user/login";
         }
         else {
             new_url += "/api/user/register"
         }
-        const response = await axios.post(new_url, data);
+        const response = await axios.post(new_url, data,{
+            withCredentials:true
+        });
         if (response.data.success) {
+            toast.success(response.data.message)
             setToken(response.data.token)
-            localStorage.setItem("token", response.data.token)
+            getUser();
             loadCartData({token:response.data.token})
             setShowLogin(false)
         }

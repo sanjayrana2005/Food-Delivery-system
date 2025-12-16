@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./Login.css";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -37,6 +37,13 @@ const Login = () => {
       toast.error(error?.response?.data?.message || "Login failed");
     }
   };
+
+  useEffect(()=>{
+    const token = localStorage.getItem("foodDelToken");
+    if(token){
+      navigateTo("/add")
+    }
+  },[])
 
   return (
     <div className="login-wrapper">

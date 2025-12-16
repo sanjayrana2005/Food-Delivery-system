@@ -1,5 +1,5 @@
 import express from 'express';
-import { loginUser,registerUser } from '../controllers/userController.js';
+import { loginUser,logoutUser,registerUser } from '../controllers/userController.js';
 import authMiddleware from '../middleware/auth.js';
 const userRouter = express.Router();
 
@@ -11,6 +11,7 @@ userRouter.get("/profile", authMiddleware, (req, res) => {
         user: req.user
     });
 });
+userRouter.get("/logout",authMiddleware,logoutUser);
 
 
 export default userRouter;

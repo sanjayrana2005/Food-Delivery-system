@@ -27,7 +27,7 @@ const loginUser = async (req, res) => {
             secure: true,
             sameSite: "none"
         });
-        res.json({ success: true,message:"Login successfully", token });
+        res.json({ success: true, message: "Login successfully", token });
     } catch (error) {
         res.json({ success: false, message: error.message })
     }
@@ -64,4 +64,19 @@ const registerUser = async (req, res) => {
     }
 }
 
-export { loginUser, registerUser }
+
+const logoutUser = async (req, res) => {
+  res.clearCookie("foodDelToken", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none"
+  });
+
+  return res.json({
+    success: true,
+    message: "Logged out successfully"
+  });
+};
+
+
+export { loginUser, registerUser, logoutUser }
