@@ -2,6 +2,7 @@ import React, { useContext } from 'react'
 import './FoodItem.css'
 import { assets } from '../../assets/assets'
 import { StoreContext } from '../../Context/StoreContext';
+import { toast } from 'react-toastify';
 
 const FoodItem = ({ image, name, price, desc, id }) => {
 
@@ -15,7 +16,10 @@ const FoodItem = ({ image, name, price, desc, id }) => {
                 {!cartItems?.[id]
                     ? <img
                         className='add'
-                        onClick={() => addToCart(id)}
+                        onClick={() => {
+                            addToCart(id)
+                            toast.success("Added to cart")
+                            }}
                         src={assets.add_icon_white}
                         alt=""
                       />
