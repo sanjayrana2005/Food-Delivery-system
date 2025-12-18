@@ -1,76 +1,98 @@
+import cartModel from "../models/cartModel.js";
 import userModel from "../models/userModel.js";
 
-// Add item to cart
-const addToCart = async (req, res) => {
-  try {
-    const user = await userModel.findById(req.user._id);
-    if (!user) return res.status(404).json({ success: false, message: "User not found" });
-
-    // Increment the cartData number
-    user.cartData = (user.cartData || 0) + 1;
-
-    await user.save();
-
-    res.status(200).json({
-      success: true,
-      cartData: user.cartData
-    });
-  } catch (error) {
-    console.error("Add cart error:", error);
-    res.status(500).json({ success: false, message: "Server error" });
-  }
-};
-
-
-// Remove item from cart
-const removeFromCart = async (req, res) => {
+// ADD FOOD TO CART
+export const addFoodToCart = async (req, res) => {
   try {
     const userId = req.user._id;
-    const { itemId } = req.body;
+    const { foodId } = req.body;
 
-    const user = await userModel.findById(userId);
-    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+    // check if cart item exists for this user and food
+    let cartItem = await cartModel.findOne({ userId, foodId });
 
-    const cart = user.cartData || new Map();
-
-    if (cart.has(itemId)) {
-      const qty = cart.get(itemId) - 1;
-      if (qty <= 0) cart.delete(itemId);
-      else cart.set(itemId, qty);
+    if (cartItem) {
+      // same food → increase quantity
+      cartItem.quantity += 1;
+      await cartItem.save();
+    } else {
+      // new food → create cart item
+      cartItem = await cartModel.create({
+        userId,
+        foodId,
+        quantity: 1,
+      });
     }
 
-    user.cartData = cart;
-    await user.save();
+    // add cartId to user.cartData (no duplicates)
+    await userModel.findByIdAndUpdate(
+      userId,
+      { $addToSet: { cartData: cartItem._id } }
+    );
 
     res.status(200).json({
       success: true,
-      message: "Removed from cart",
-      cartData: Object.fromEntries(cart)
+      message: "Food added to cart",
+      data: cartItem,
     });
+
   } catch (error) {
-    console.error("Remove from cart error:", error);
-    res.status(500).json({ success: false, message: "Server error" });
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
-// Get user cart
-const getCart = async (req, res) => {
+
+
+// REMOVE FOOD FROM CART
+export const removeFoodFromCart = async (req, res) => {
   try {
-    const user = await userModel.findById(req.user._id);
-    if (!user) return res.status(404).json({ success: false, message: "User not found" });
-     
-    let cartData = user.cartData || 0;
-    cartData = cartData + 1;
-    
+    const userId = req.user._id;
+    const { foodId } = req.body;
 
-    res.status(200).json({
+    const cartItem = await cartModel.findOne({ userId, foodId });
+
+    if (!cartItem) {
+      return res.status(404).json({
+        success: false,
+        message: "Item not found in cart",
+      });
+    }
+
+    if (cartItem.quantity > 1) {
+      cartItem.quantity -= 1;
+      await cartItem.save();
+    } else {
+      await cartModel.findByIdAndDelete(cartItem._id);
+    }
+
+    return res.status(200).json({
       success: true,
-      cartData
+      message: "Food removed from cart",
     });
+
   } catch (error) {
-    console.error("Get cart error:", error);
-    res.status(500).json({ success: false, message: "Server error" });
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
-export { addToCart, removeFromCart, getCart };
+
+export const getUserCart = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const cartItems = await cartModel
+      .find({ userId })
+      .populate("foodId");
+
+    res.status(200).json({
+      success: true,
+      data: cartItems,
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+

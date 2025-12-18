@@ -11,10 +11,10 @@ const cartSchema =new mongoose.Schema({
     },
     quantity:{
         type:Number,
-        default:0
+        default:1
     },
    
 },{timestamps:true});
 
 const cartModel = new mongoose.model("cart",cartSchema);
-module.exports = cartModel;
+export default cartModel;

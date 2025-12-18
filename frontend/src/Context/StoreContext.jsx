@@ -41,10 +41,10 @@ const StoreContextProvider = (props) => {
     }));
 
     if (token) {
-      await axios.post(
+      await axios.delte(
         `${BACKEND_URL}/api/cart/remove`,
         { itemId },
-        { headers: { token } }
+        { withCredentials:true}
       );
     }
   };
