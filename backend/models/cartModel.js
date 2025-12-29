@@ -5,10 +5,10 @@ const cartSchema =new mongoose.Schema({
         type:mongoose.Schema.ObjectId,
         ref:"user"
     },
-    foodId:[{
+    foodId:{
         type:mongoose.Schema.ObjectId,
         ref:"food"
-    }],
+    },
     quantity:{
         type:Number,
         default:1

@@ -1,6 +1,7 @@
 import { createContext, useEffect, useState } from "react";
 import { menu_list } from "../assets/assets";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 export const StoreContext = createContext(null);
 
@@ -9,44 +10,68 @@ const StoreContextProvider = (props) => {
   const [foodList, setFoodList] = useState([]);
   const [cartItems, setCartItems] = useState({});
   const [token, setToken] = useState("");
-  const [user, setUser] = useState()
- console.log(user)
+  const [user, setUser] = useState();
   const currency = "₹";
   const deliveryCharge = 50;
 
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
-  /* ---------------- ADD TO CART ---------------- */
-  const addToCart = async (itemId) => {
-    setCartItems(prev => ({
-      ...(prev || {}),
-      [itemId]: (prev?.[itemId] || 0) + 1
-    }));
 
-    if (token) {
-      await axios.post(
+    /* ---------------- LOAD CART DATA ---------------- */
+ const loadCartData = async () => {
+  try {
+    const { data } = await axios.get(
+      `${BACKEND_URL}/api/cart/get`,
+      { withCredentials: true }
+    );
+    const cartArray = data?.cartItems || data?.cartItems || [];
+
+    setCartItems(cartArray);
+
+  } catch (error) {
+    console.error("Load cart error:", error);
+  }
+};
+
+
+
+  /* ---------------- ADD TO CART ---------------- */
+  const addToCart = async (foodId) => {
+    try {
+      const { data } = await axios.post(
         `${BACKEND_URL}/api/cart/add`,
-        { itemId },
+        { foodId },
         { withCredentials: true }
       );
+      if (data.success) {
+        toast.success(data.message)
+        setCartItems(prev => ({
+          ...prev,
+          [foodId]: (prev?.[foodId] || 0) + 1
+        }));
+        loadCartData();
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message)
+      console.error("Add cart error:", error.response?.data?.message || error.message);
     }
   };
 
 
+
   /* ---------------- REMOVE FROM CART ---------------- */
-  const removeFromCart = async (itemId) => {
+  const removeFromCart = async (foodId) => {
     setCartItems(prev => ({
       ...(prev || {}),
-      [itemId]: Math.max((prev?.[itemId] || 0) - 1, 0)
+      [foodId]: Math.max((prev?.[foodId] || 0) - 1, 0)
     }));
-
-    if (token) {
-      await axios.delte(
-        `${BACKEND_URL}/api/cart/remove`,
-        { itemId },
-        { withCredentials:true}
-      );
-    }
+    const {data} = await axios.delete(
+      `${BACKEND_URL}/api/cart/remove`, { foodId },
+      {
+        withCredentials: true
+      }
+    );
+    toast.success(data.message)
   };
 
 
@@ -79,14 +104,9 @@ const StoreContextProvider = (props) => {
     }
   };
 
-  /* ---------------- LOAD CART DATA ---------------- */
-  const loadCartData = async (userToken) => {
-    const { data } = await axios.get(
-      `${BACKEND_URL}/api/cart/get`,
-      { withCredentials: true }
-    );
-    setCartItems(data?.cartData || {});
-  };
+
+
+
 
   const getUser = async () => {
     const { data } = await axios.get(`${BACKEND_URL}/api/user/profile`, {
@@ -124,7 +144,7 @@ const StoreContextProvider = (props) => {
     currency,
     deliveryCharge,
     getUser,
-    user,setUser
+    user, setUser
   };
 
   return (

@@ -36,7 +36,6 @@ export const addFoodToCart = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -87,7 +86,7 @@ export const getUserCart = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      data: cartItems,
+      cartItems,
     });
 
   } catch (error) {
