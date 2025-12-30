@@ -1,36 +1,51 @@
-import axios from 'axios';
-import React, { useContext, useEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
-import { StoreContext } from '../../Context/StoreContext';
-import './Verify.css'
+// Frontend: /verify page
+import React, { useEffect, useContext } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { StoreContext } from "../../Context/StoreContext";
+import { toast } from "react-toastify";
 
-const Verify = () => {
-  const { url } = useContext(StoreContext)
-  const [searchParams, setSearchParams] = useSearchParams();
-  const success = searchParams.get("success")
-  const orderId = searchParams.get("orderId")
-
+const VerifyOrder = () => {
+  const { setCartItems, loadCartData, url } = useContext(StoreContext);
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || url;
   const navigate = useNavigate();
-
-  const verifyPayment = async () => {
-    const response = await axios.post(url + "/api/order/verify", { success, orderId });
-    if (response.data.success) {
-      navigate("/myorders");
-    }
-    else {
-      navigate("/")
-    }
-  }
+  const location = useLocation();
 
   useEffect(() => {
-    verifyPayment();
-  }, [])
+    const params = new URLSearchParams(location.search);
+    const orderId = params.get("orderId");
+    const success = params.get("success");
 
-  return (
-    <div className='verify'>
-      <div className="spinner"></div>
-    </div>
-  )
-}
+    const verify = async () => {
+      try {
+        const { data } = await axios.post(
+          `${BACKEND_URL}/api/order/verify`,
+          { orderId, success },
+          { withCredentials: true }
+        );
 
-export default Verify
+        if (data.success) {
+          toast.success("Payment successful, order placed!");
+          // Clear frontend cart
+          setCartItems([]);
+          // Clear backend cart
+          await axios.post(`${BACKEND_URL}/api/cart/clear`, {}, { withCredentials: true });
+          await loadCartData();
+          navigate("/myorders");
+        } else {
+          toast.error("Payment failed or not verified");
+          navigate("/cart");
+        }
+      } catch (err) {
+        toast.error("Error verifying order");
+        navigate("/cart");
+      }
+    };
+
+    if (orderId) verify();
+  }, []);
+
+  return <div>Verifying your order...</div>;
+};
+
+export default VerifyOrder;

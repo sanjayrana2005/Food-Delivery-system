@@ -75,6 +75,25 @@ export const removeFoodFromCart = async (req, res) => {
   }
 };
 
+// cartController.js
+export const clearCart = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Delete all cart items for the user
+    await cartModel.deleteMany({ userId });
+
+    // Clear user's cartData array
+    await userModel.findByIdAndUpdate(userId, { cartData: [] });
+
+    res.json({ success: true, message: "Cart cleared" });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: "Error clearing cart" });
+  }
+};
+
+
 
 export const getUserCart = async (req, res) => {
   try {

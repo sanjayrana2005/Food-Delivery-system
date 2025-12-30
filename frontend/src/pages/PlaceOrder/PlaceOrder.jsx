@@ -26,10 +26,13 @@ const PlaceOrder = () => {
 
   // ---------------- HANDLE INPUT ----------------
   const onChangeHandler = (e) => {
-    setData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    setData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
   };
 
-  // ---------------- CALCULATE TOTAL ----------------
+  // ---------------- TOTAL ----------------
   const getTotalCartAmount = () => {
     return Array.isArray(cartItems)
       ? cartItems.reduce(
@@ -49,6 +52,7 @@ const PlaceOrder = () => {
     }
 
     const orderItems = cartItems.map(item => ({
+      foodId: item.foodId._id,
       name: item.foodId.name,
       price: item.foodId.price,
       quantity: item.quantity
@@ -62,35 +66,35 @@ const PlaceOrder = () => {
 
     try {
       if (payment === "stripe") {
-        const { data } = await axios.post(
-          `${BACKEND_URL}/api/order/place`,
-          orderData,
-          { withCredentials: true } // cookies sent automatically
-        );
-
+        const { data } = await axios.post(`${BACKEND_URL}/api/order/place`, orderData, { withCredentials: true });
         if (data.success) {
+          // Stripe checkout redirect
           window.location.replace(data.session_url);
         } else {
           toast.error("Payment failed");
         }
-
       } else {
-        const { data } = await axios.post(
-          `${BACKEND_URL}/api/order/placecod`,
-          orderData,
-          { withCredentials: true }
-        );
-
+        // COD order
+        const { data } = await axios.post(`${BACKEND_URL}/api/order/placecod`, orderData, { withCredentials: true });
         if (data.success) {
           toast.success(data.message);
-          setCartItems([]); // clear local cart
-          await loadCartData(); // reload cart from backend
+
+          // Clear frontend cart
+          setCartItems([]);
+
+          // Clear backend cart
+          await axios.post(`${BACKEND_URL}/api/cart/clear`, {}, { withCredentials: true });
+
+          // Reload cart data from backend
+          await loadCartData();
+
           navigate("/myorders");
         } else {
           toast.error("Order failed");
         }
       }
     } catch (error) {
+      console.error(error);
       toast.error(error.response?.data?.message || "Order error");
     }
   };
@@ -162,7 +166,7 @@ const PlaceOrder = () => {
 
           <div onClick={() => setPayment("stripe")} className="payment-option">
             <img src={payment === "stripe" ? assets.checked : assets.un_checked} alt="" />
-            <p>Stripe (Card)</p>
+            <p>Card</p>
           </div>
         </div>
 

@@ -17,24 +17,22 @@ const StoreContextProvider = (props) => {
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
   /* ---------------- LOAD CART DATA ---------------- */
-  const loadCartData = async () => {
-    try {
-      const { data } = await axios.get(`${BACKEND_URL}/api/cart/get`, { withCredentials: true });
-      setCartItems(data.cartItems);
-    } catch (error) {
-      console.error("Load cart error:", error);
-    }
-  };
+ /* ---------------- LOAD CART DATA ---------------- */
+const loadCartData = async () => {
+  try {
+    const { data } = await axios.get(`${BACKEND_URL}/api/cart/get`, { withCredentials: true });
+    // backend returns array of { foodId, quantity }
+    setCartItems(Array.isArray(data.cartItems) ? data.cartItems : []);
+  } catch (error) {
+    console.error("Load cart error:", error);
+  }
+};
+
 
 
   /* ---------------- ADD TO CART ---------------- */
   const addToCart = async (foodId) => {
-    setCartItems(prev => ({
-      ...prev,
-      [foodId]: (prev[foodId] || 0) + 1
-    }));
-
-    try {
+       try {
       const { data } = await axios.post(`${BACKEND_URL}/api/cart/add`, { foodId }, { withCredentials: true });
       if (data.success) {
         toast.success(data.message);

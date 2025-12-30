@@ -26,7 +26,6 @@ const FoodItem = ({ image, name, price, desc, id }) => {
             className="add"
             onClick={() => {
               addToCart(id);
-              toast.success("Added to cart");
             }}
             src={assets.add_icon_white}
             alt="Add"
