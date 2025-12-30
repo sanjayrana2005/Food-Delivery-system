@@ -16,6 +16,11 @@
     font-size: max(1vw, 12px);
 }
 
+.no-food-in-cart{
+    color: grey;
+    font-size: max(1vw, 25px);
+}
+
 .cart-items-item {
     margin: 10px 0px;
     color: black;
