@@ -8,7 +8,7 @@ export const StoreContext = createContext(null);
 const StoreContextProvider = (props) => {
 
   const [foodList, setFoodList] = useState([]);
-  const [cartItems, setCartItems] = useState({});
+  const [cartItems, setCartItems] = useState([]);
   const [token, setToken] = useState("");
   const [user, setUser] = useState();
   const currency = "₹";
@@ -16,63 +16,57 @@ const StoreContextProvider = (props) => {
 
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
-
-    /* ---------------- LOAD CART DATA ---------------- */
- const loadCartData = async () => {
-  try {
-    const { data } = await axios.get(
-      `${BACKEND_URL}/api/cart/get`,
-      { withCredentials: true }
-    );
-    const cartArray = data?.cartItems || data?.cartItems || [];
-
-    setCartItems(cartArray);
-
-  } catch (error) {
-    console.error("Load cart error:", error);
-  }
-};
-
-
-
-  /* ---------------- ADD TO CART ---------------- */
-  const addToCart = async (foodId) => {
+  /* ---------------- LOAD CART DATA ---------------- */
+  const loadCartData = async () => {
     try {
-      const { data } = await axios.post(
-        `${BACKEND_URL}/api/cart/add`,
-        { foodId },
-        { withCredentials: true }
-      );
-      if (data.success) {
-        toast.success(data.message)
-        setCartItems(prev => ({
-          ...prev,
-          [foodId]: (prev?.[foodId] || 0) + 1
-        }));
-        loadCartData();
-      }
+      const { data } = await axios.get(`${BACKEND_URL}/api/cart/get`, { withCredentials: true });
+      setCartItems(data.cartItems);
     } catch (error) {
-      toast.error(error.response?.data?.message)
-      console.error("Add cart error:", error.response?.data?.message || error.message);
+      console.error("Load cart error:", error);
     }
   };
 
 
+  /* ---------------- ADD TO CART ---------------- */
+  const addToCart = async (foodId) => {
+    setCartItems(prev => ({
+      ...prev,
+      [foodId]: (prev[foodId] || 0) + 1
+    }));
+
+    try {
+      const { data } = await axios.post(`${BACKEND_URL}/api/cart/add`, { foodId }, { withCredentials: true });
+      if (data.success) {
+        toast.success(data.message);
+        loadCartData();
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Error adding to cart");
+    }
+  };
 
   /* ---------------- REMOVE FROM CART ---------------- */
-  const removeFromCart = async (foodId) => {
-    setCartItems(prev => ({
-      ...(prev || {}),
-      [foodId]: Math.max((prev?.[foodId] || 0) - 1, 0)
-    }));
-    const {data} = await axios.delete(
-      `${BACKEND_URL}/api/cart/remove`, { foodId },
+const removeFromCart = async (foodId) => {
+  try {
+    const { data } = await axios.delete(
+      `${BACKEND_URL}/api/cart/remove`,
       {
+        data: { foodId },          // ✅ correct
         withCredentials: true
       }
     );
-    toast.success(data.message)
-  };
+
+    if (data.success) {
+      toast.success(data.message);
+      loadCartData();
+    }
+  } catch (error) {
+    toast.error(
+      error.response?.data?.message || "Unauthorized / Error removing item"
+    );
+  }
+};
+
 
 
   /* ---------------- TOTAL CART AMOUNT ---------------- */
@@ -103,10 +97,6 @@ const StoreContextProvider = (props) => {
       console.error("Food list error", error);
     }
   };
-
-
-
-
 
   const getUser = async () => {
     const { data } = await axios.get(`${BACKEND_URL}/api/user/profile`, {

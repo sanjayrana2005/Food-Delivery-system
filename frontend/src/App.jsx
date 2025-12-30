@@ -17,10 +17,11 @@ import { StoreContext } from './Context/StoreContext'
 const App = () => {
 
   const [showLogin,setShowLogin] = useState(false);
-   const {cartItems, food_list, removeFromCart,getTotalCartAmount,url,currency,deliveryCharge,getUser,user,token,loadCartData} = useContext(StoreContext);
+   const {cartItems, food_list, removeFromCart,getTotalCartAmount,url,currency,deliveryCharge,getUser,user,token,loadCartData,fetchFoodList} = useContext(StoreContext);
   useEffect(()=>{
     getUser();
     loadCartData();
+    fetchFoodList();
   },[token])
 
   return (
