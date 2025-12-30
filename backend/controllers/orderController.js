@@ -14,13 +14,13 @@ const placeOrder = async (req, res) => {
 
     try {
         const newOrder = new orderModel({
-            userId: req.body.userId,
+            userId: req.user._id,
             items: req.body.items,
             amount: req.body.amount,
             address: req.body.address,
         })
         await newOrder.save();
-        await userModel.findByIdAndUpdate(req.body.userId, { cartData: {} });
+        await userModel.findByIdAndUpdate(req.body.userId, { cartData: [] });
 
         const line_items = req.body.items.map((item) => ({
             price_data: {
@@ -64,14 +64,14 @@ const placeOrderCod = async (req, res) => {
 
     try {
         const newOrder = new orderModel({
-            userId: req.body.userId,
+            userId: req.user._id,
             items: req.body.items,
             amount: req.body.amount,
             address: req.body.address,
             payment: true,
         })
         await newOrder.save();
-        await userModel.findByIdAndUpdate(req.body.userId, { cartData: {} });
+        await userModel.findByIdAndUpdate(req.user._id, { cartData: [] });
 
         res.json({ success: true, message: "Order Placed" });
 
@@ -95,7 +95,7 @@ const listOrders = async (req, res) => {
 // User Orders for Frontend
 const userOrders = async (req, res) => {
     try {
-        const orders = await orderModel.find({ userId: req.body.userId });
+        const orders = await orderModel.find({ userId: req.user._id });
         res.json({ success: true, data: orders })
     } catch (error) {
         console.log(error);

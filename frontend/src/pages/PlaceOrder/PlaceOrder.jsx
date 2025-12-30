@@ -1,131 +1,177 @@
-import React, { useContext, useEffect, useState } from 'react'
-import './PlaceOrder.css'
-import { StoreContext } from '../../Context/StoreContext'
+import React, { useContext, useEffect, useState } from 'react';
+import './PlaceOrder.css';
+import { StoreContext } from '../../Context/StoreContext';
 import { assets } from '../../assets/assets';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 
 const PlaceOrder = () => {
+  const [payment, setPayment] = useState("cod");
+  const [data, setData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    street: "",
+    city: "",
+    state: "",
+    zipcode: "",
+    country: "",
+    phone: ""
+  });
 
-    const [payment, setPayment] = useState("cod")
-    const [data, setData] = useState({
-        firstName: "",
-        lastName: "",
-        email: "",
-        street: "",
-        city: "",
-        state: "",
-        zipcode: "",
-        country: "",
-        phone: ""
-    })
+  const { cartItems, currency, deliveryCharge, setCartItems, loadCartData, url } = useContext(StoreContext);
+  const navigate = useNavigate();
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || url;
 
-    const { getTotalCartAmount, token, food_list, cartItems, url, setCartItems,currency,deliveryCharge } = useContext(StoreContext);
+  // ---------------- HANDLE INPUT ----------------
+  const onChangeHandler = (e) => {
+    setData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
 
-    const navigate = useNavigate();
+  // ---------------- CALCULATE TOTAL ----------------
+  const getTotalCartAmount = () => {
+    return Array.isArray(cartItems)
+      ? cartItems.reduce(
+          (total, item) => total + item.foodId.price * item.quantity,
+          0
+        )
+      : 0;
+  };
 
-    const onChangeHandler = (event) => {
-        const name = event.target.name
-        const value = event.target.value
-        setData(data => ({ ...data, [name]: value }))
+  // ---------------- PLACE ORDER ----------------
+  const placeOrder = async (e) => {
+    e.preventDefault();
+
+    if (!cartItems || cartItems.length === 0) {
+      toast.error("Cart is empty");
+      return;
     }
 
-    const placeOrder = async (e) => {
-        e.preventDefault()
-        let orderItems = [];
-        food_list.map(((item) => {
-            if (cartItems[item._id] > 0) {
-                let itemInfo = item;
-                itemInfo["quantity"] = cartItems[item._id];
-                orderItems.push(itemInfo)
-            }
-        }))
-        let orderData = {
-            address: data,
-            items: orderItems,
-            amount: getTotalCartAmount() + deliveryCharge,
-        }
-        if (payment === "stripe") {
-            let response = await axios.post(url + "/api/order/place", orderData, { headers: { token } });
-            if (response.data.success) {
-                const { session_url } = response.data;
-                window.location.replace(session_url);
-            }
-            else {
-                toast.error("Something Went Wrong")
-            }
-        }
-        else{
-            let response = await axios.post(url + "/api/order/placecod", orderData, { headers: { token } });
-            if (response.data.success) {
-                navigate("/myorders")
-                toast.success(response.data.message)
-                setCartItems({});
-            }
-            else {
-                toast.error("Something Went Wrong")
-            }
+    const orderItems = cartItems.map(item => ({
+      name: item.foodId.name,
+      price: item.foodId.price,
+      quantity: item.quantity
+    }));
+
+    const orderData = {
+      address: data,
+      items: orderItems,
+      amount: getTotalCartAmount() + deliveryCharge
+    };
+
+    try {
+      if (payment === "stripe") {
+        const { data } = await axios.post(
+          `${BACKEND_URL}/api/order/place`,
+          orderData,
+          { withCredentials: true } // cookies sent automatically
+        );
+
+        if (data.success) {
+          window.location.replace(data.session_url);
+        } else {
+          toast.error("Payment failed");
         }
 
+      } else {
+        const { data } = await axios.post(
+          `${BACKEND_URL}/api/order/placecod`,
+          orderData,
+          { withCredentials: true }
+        );
+
+        if (data.success) {
+          toast.success(data.message);
+          setCartItems([]); // clear local cart
+          await loadCartData(); // reload cart from backend
+          navigate("/myorders");
+        } else {
+          toast.error("Order failed");
+        }
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Order error");
     }
+  };
 
-    useEffect(() => {
-        if (!token) {
-            toast.error("to place an order sign in first")
-            navigate('/cart')
-        }
-        else if (getTotalCartAmount() === 0) {
-            navigate('/cart')
-        }
-    }, [token])
+  // ---------------- AUTH CHECK ----------------
+  useEffect(() => {
+    if (!cartItems || cartItems.length === 0) {
+      navigate("/cart");
+    }
+  }, [cartItems]);
 
-    return (
-        <form onSubmit={placeOrder} className='place-order'>
-            <div className="place-order-left">
-                <p className='title'>Delivery Information</p>
-                <div className="multi-field">
-                    <input type="text" name='firstName' onChange={onChangeHandler} value={data.firstName} placeholder='First name' required />
-                    <input type="text" name='lastName' onChange={onChangeHandler} value={data.lastName} placeholder='Last name' required />
-                </div>
-                <input type="email" name='email' onChange={onChangeHandler} value={data.email} placeholder='Email address' required />
-                <input type="text" name='street' onChange={onChangeHandler} value={data.street} placeholder='Street' required />
-                <div className="multi-field">
-                    <input type="text" name='city' onChange={onChangeHandler} value={data.city} placeholder='City' required />
-                    <input type="text" name='state' onChange={onChangeHandler} value={data.state} placeholder='State' required />
-                </div>
-                <div className="multi-field">
-                    <input type="text" name='zipcode' onChange={onChangeHandler} value={data.zipcode} placeholder='Zip code' required />
-                    <input type="text" name='country' onChange={onChangeHandler} value={data.country} placeholder='Country' required />
-                </div>
-                <input type="text" name='phone' onChange={onChangeHandler} value={data.phone} placeholder='Phone' required />
-            </div>
-            <div className="place-order-right">
-                <div className="cart-total">
-                    <h2>Cart Totals</h2>
-                    <div>
-                        <div className="cart-total-details"><p>Subtotal</p><p>{currency}{getTotalCartAmount()}</p></div>
-                        <hr />
-                        <div className="cart-total-details"><p>Delivery Fee</p><p>{currency}{getTotalCartAmount() === 0 ? 0 : deliveryCharge}</p></div>
-                        <hr />
-                        <div className="cart-total-details"><b>Total</b><b>{currency}{getTotalCartAmount() === 0 ? 0 : getTotalCartAmount() + deliveryCharge}</b></div>
-                    </div>
-                </div>
-                <div className="payment">
-                    <h2>Payment Method</h2>
-                    <div onClick={() => setPayment("cod")} className="payment-option">
-                        <img src={payment === "cod" ? assets.checked : assets.un_checked} alt="" />
-                        <p>COD ( Cash on delivery )</p>
-                    </div>
-                    <div onClick={() => setPayment("stripe")} className="payment-option">
-                        <img src={payment === "stripe" ? assets.checked : assets.un_checked} alt="" />
-                        <p>Stripe ( Credit / Debit )</p>
-                    </div>
-                </div>
-                <button className='place-order-submit' type='submit'>{payment==="cod"?"Place Order":"Proceed To Payment"}</button>
-            </div>
-        </form>
-    )
-}
+  return (
+    <form onSubmit={placeOrder} className="place-order">
+      {/* LEFT SIDE - DELIVERY INFO */}
+      <div className="place-order-left">
+        <p className="title">Delivery Information</p>
 
-export default PlaceOrder
+        <div className="multi-field">
+          <input name="firstName" value={data.firstName} onChange={onChangeHandler} placeholder="First name" required />
+          <input name="lastName" value={data.lastName} onChange={onChangeHandler} placeholder="Last name" required />
+        </div>
+
+        <input name="email" value={data.email} onChange={onChangeHandler} placeholder="Email" required />
+        <input name="street" value={data.street} onChange={onChangeHandler} placeholder="Street" required />
+
+        <div className="multi-field">
+          <input name="city" value={data.city} onChange={onChangeHandler} placeholder="City" required />
+          <input name="state" value={data.state} onChange={onChangeHandler} placeholder="State" required />
+        </div>
+
+        <div className="multi-field">
+          <input name="zipcode" value={data.zipcode} onChange={onChangeHandler} placeholder="Zip code" required />
+          <input name="country" value={data.country} onChange={onChangeHandler} placeholder="Country" required />
+        </div>
+
+        <input name="phone" value={data.phone} onChange={onChangeHandler} placeholder="Phone" required />
+      </div>
+
+      {/* RIGHT SIDE - CART TOTAL & PAYMENT */}
+      <div className="place-order-right">
+        <div className="cart-total">
+          <h2>Cart Totals</h2>
+
+          <div className="cart-total-details">
+            <p>Subtotal</p>
+            <p>{currency}{getTotalCartAmount()}</p>
+          </div>
+          <hr />
+
+          <div className="cart-total-details">
+            <p>Delivery Fee</p>
+            <p>{currency}{deliveryCharge}</p>
+          </div>
+          <hr />
+
+          <div className="cart-total-details">
+            <b>Total</b>
+            <b>{currency}{getTotalCartAmount() + deliveryCharge}</b>
+          </div>
+        </div>
+
+        <div className="payment">
+          <h2>Payment Method</h2>
+
+          <div onClick={() => setPayment("cod")} className="payment-option">
+            <img src={payment === "cod" ? assets.checked : assets.un_checked} alt="" />
+            <p>COD (Cash on Delivery)</p>
+          </div>
+
+          <div onClick={() => setPayment("stripe")} className="payment-option">
+            <img src={payment === "stripe" ? assets.checked : assets.un_checked} alt="" />
+            <p>Stripe (Card)</p>
+          </div>
+        </div>
+
+        <button type="submit" className="place-order-submit">
+          {payment === "cod" ? "Place Order" : "Proceed To Payment"}
+        </button>
+      </div>
+    </form>
+  );
+};
+
+export default PlaceOrder;
